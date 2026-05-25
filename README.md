@@ -8,17 +8,17 @@ If you just want to use the app, download it from the GitHub `Releases` page.
 
 Recommended file:
 
-- `PDFConverter-Setup.exe`
+- `PDFToolkit-Setup.exe`
 
 Steps:
 
-1. Download `PDFConverter-Setup.exe` from the latest release.
+1. Download `PDFToolkit-Setup.exe` from the latest release.
 2. Run the installer.
 3. Launch `PDF Toolkit` from the Start menu or desktop shortcut.
 
 Portable option:
 
-- `PDFConverter.exe`
+- `PDFToolkit.exe`
   Use this if you want to run the app without installing it.
 
 ## Main Features
@@ -50,15 +50,15 @@ Portable option:
 
 ## Download Options
 
-- `PDFConverter-Setup.exe`
+- `PDFToolkit-Setup.exe`
   Recommended for most users. Installs the app normally.
-- `PDFConverter.exe`
+- `PDFToolkit.exe`
   Portable version. Runs without installation.
 
 ## Updating to a New Version
 
 1. Close the app if it is running.
-2. Download the newest `PDFConverter-Setup.exe` from `Releases`.
+2. Download the newest `PDFToolkit-Setup.exe` from `Releases`.
 3. Run the installer again.
 
 The installer is configured to reuse the previous install location and close the app when possible.
@@ -96,7 +96,7 @@ cd "C:\path\to\pdf_converter-main"
 powershell -ExecutionPolicy Bypass -File .\build_exe.ps1
 ```
 
-If the build says the output file is locked, close any running `PDFConverter.exe` window and try again.
+If the build says the output file is locked, close any running `PDFToolkit.exe` window and try again.
 
 ### Build the Full Release Locally
 
@@ -120,7 +120,7 @@ powershell -ExecutionPolicy Bypass -File .\build_release.ps1 -SkipInstaller
 
 ### Installer Build Requirement
 
-To create `PDFConverter-Setup.exe`, you need `Inno Setup 6`.
+To create `PDFToolkit-Setup.exe`, you need `Inno Setup 6`.
 
 If needed, you can pass the compiler path manually:
 
@@ -146,8 +146,8 @@ git push origin v1.0.0
 
 That workflow builds:
 
-- `PDFConverter.exe`
-- `PDFConverter-Setup.exe`
+- `PDFToolkit.exe`
+- `PDFToolkit-Setup.exe`
 
 and attaches them to the GitHub `Releases` page.
 
@@ -172,4 +172,5 @@ pdf_converter-main/
 ├─ pdf_converter/
 └─ .github/workflows/
 ```
+
 

@@ -35,7 +35,8 @@
 ## 4. Packaging
 
 - Run `build_release.bat`.
-- Confirm `release/PDFConverter.exe` is created.
-- Confirm `release/PDFConverter-Setup.exe` is created when Inno Setup is installed.
+- Confirm `release/PDFToolkit.exe` is created.
+- Confirm `release/PDFToolkit-Setup.exe` is created when Inno Setup is installed.
 - Launch the packaged EXE.
 - Verify both modes open and basic actions still work.
+

@@ -78,7 +78,7 @@ function Remove-OldFileIfPossible {
 The existing output file is locked and could not be replaced:
 $PathToRemove
 
-Please close PDFConverter.exe if it is still running,
+Please close PDFToolkit.exe if it is still running,
 close any Explorer window previewing the file,
 and run the build again.
 "@
@@ -98,7 +98,7 @@ $buildToken = Get-Date -Format "yyyyMMdd_HHmmss"
 $distPath = Join-Path $buildRoot "dist_$buildToken"
 $workPath = Join-Path $buildRoot "work_$buildToken"
 $specPath = Join-Path $buildRoot "spec_$buildToken"
-$finalExePath = Join-Path $releaseDir "PDFConverter.exe"
+$finalExePath = Join-Path $releaseDir "PDFToolkit.exe"
 $iconPath = Join-Path $projectRoot "assets\app_icon.ico"
 
 if (-not (Test-Path $pythonExe)) {
@@ -149,7 +149,7 @@ Write-Host "[3/5] Building with PyInstaller..."
     --distpath $distPath `
     --workpath $workPath `
     --specpath $specPath `
-    --name PDFConverter `
+    --name PDFToolkit `
     @iconArgs `
     app.py
 if ($LASTEXITCODE -ne 0) {
@@ -157,7 +157,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "[4/5] Copying final executable..."
-Copy-Item -LiteralPath (Join-Path $distPath "PDFConverter.exe") -Destination $finalExePath -Force
+Copy-Item -LiteralPath (Join-Path $distPath "PDFToolkit.exe") -Destination $finalExePath -Force
 
 Write-Host "[5/5] Done"
 Write-Host "Created file: $finalExePath"
+

@@ -1,7 +1,7 @@
 ﻿#define MyAppName "PDF Toolkit"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "LeeInpyo"
-#define MyAppExeName "PDFConverter.exe"
+#define MyAppExeName "PDFToolkit.exe"
 
 [Setup]
 AppId={{8C0E4D39-2A74-4F65-AE0C-BD42C69F8D52}
@@ -14,7 +14,7 @@ DisableProgramGroupPage=yes
 UsePreviousAppDir=yes
 UsePreviousGroup=yes
 OutputDir=..\release
-OutputBaseFilename=PDFConverter-Setup
+OutputBaseFilename=PDFToolkit-Setup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -42,4 +42,5 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
+
 

@@ -1,4 +1,4 @@
-﻿# PDF Converter Requirements
+﻿# PDF Toolkit Requirements
 
 ## Goal
 
@@ -87,7 +87,7 @@ Nice-to-have behavior:
 - The app should remain a local-only desktop utility.
 - The app should not require uploading files to any external service.
 - The app should continue to work as a packaged EXE.
-- The app should remain easy to distribute through `PDFConverter.exe` and `PDFConverter-Setup.exe`.
+- The app should remain easy to distribute through `PDFToolkit.exe` and `PDFToolkit-Setup.exe`.
 
 ## Dependencies
 
@@ -126,8 +126,8 @@ Before release, verify the following manually.
 ### Packaging Checklist
 
 - run `build_release.bat`
-- verify `release/PDFConverter.exe` is created
-- verify `release/PDFConverter-Setup.exe` is created when Inno Setup is installed
+- verify `release/PDFToolkit.exe` is created
+- verify `release/PDFToolkit-Setup.exe` is created when Inno Setup is installed
 - launch the packaged EXE and verify both modes open normally
 
 ## Out of Scope for This Phase
@@ -151,3 +151,4 @@ This phase is complete when:
 - export and merge operations show visible progress feedback
 - the smoke-test checklist is documented
 - the packaged app still builds successfully
+

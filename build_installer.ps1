@@ -36,8 +36,8 @@ $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $projectRoot
 
 $releaseDir = Join-Path $projectRoot "release"
-$exePath = Join-Path $releaseDir "PDFConverter.exe"
-$finalSetupPath = Join-Path $releaseDir "PDFConverter-Setup.exe"
+$exePath = Join-Path $releaseDir "PDFToolkit.exe"
+$finalSetupPath = Join-Path $releaseDir "PDFToolkit-Setup.exe"
 $isccPath = Resolve-InnoSetupCompiler -RequestedCompiler $InnoSetupCompiler
 
 if (-not (Test-Path $exePath)) {
@@ -60,10 +60,11 @@ if (Test-Path $finalSetupPath) {
 }
 
 Write-Host "[2/3] Building installer..."
-& $isccPath (Join-Path $projectRoot "installer\PDFConverter.iss")
+& $isccPath (Join-Path $projectRoot "installer\PDFToolkit.iss")
 if ($LASTEXITCODE -ne 0) {
     throw "Installer build failed."
 }
 
 Write-Host "[3/3] Done"
 Write-Host "Created file: $finalSetupPath"
+

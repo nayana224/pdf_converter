@@ -10,7 +10,7 @@ Set-StrictMode -Version Latest
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $projectRoot
 
-Write-Host "Starting PDF Converter release build..."
+Write-Host "Starting PDF Toolkit release build..."
 
 $exeArgs = @()
 if ($PythonCommand) {
@@ -38,3 +38,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Release build complete. Check the release folder."
+

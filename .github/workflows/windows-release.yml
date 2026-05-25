@@ -33,16 +33,17 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pdf-converter-windows
+          name: pdf-toolkit-windows
           path: |
-            release/PDFConverter.exe
-            release/PDFConverter-Setup.exe
+            release/PDFToolkit.exe
+            release/PDFToolkit-Setup.exe
 
       - name: Publish GitHub release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            release/PDFConverter.exe
-            release/PDFConverter-Setup.exe
+            release/PDFToolkit.exe
+            release/PDFToolkit-Setup.exe
           generate_release_notes: true
+
