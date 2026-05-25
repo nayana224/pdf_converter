@@ -27,17 +27,32 @@ def is_supported_image(path: Path) -> bool:
     return path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS
 
 
-def normalize_paths(paths: Iterable[str | Path]) -> list[Path]:
+def classify_image_paths(
+    paths: Iterable[str | Path],
+    existing_paths: Iterable[Path] = (),
+) -> tuple[list[Path], int, int]:
     unique_paths: list[Path] = []
-    seen: set[Path] = set()
+    seen: set[Path] = set(existing_paths)
+    duplicate_count = 0
+    unsupported_count = 0
 
     for raw_path in paths:
         path = Path(raw_path).expanduser().resolve()
-        if path in seen or not is_supported_image(path):
+        if path in seen:
+            duplicate_count += 1
             continue
+        if not is_supported_image(path):
+            unsupported_count += 1
+            continue
+
         seen.add(path)
         unique_paths.append(path)
 
+    return unique_paths, duplicate_count, unsupported_count
+
+
+def normalize_paths(paths: Iterable[str | Path]) -> list[Path]:
+    unique_paths, _, _ = classify_image_paths(paths)
     return unique_paths
 
 

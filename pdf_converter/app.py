@@ -4,8 +4,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QColor, QIcon, QPalette
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QAction, QColor, QDesktopServices, QIcon, QPalette
 try:
     from PySide6.QtPdf import QPdfDocument
     from PySide6.QtPdfWidgets import QPdfView
@@ -14,6 +14,7 @@ try:
 except ImportError:
     PDF_PREVIEW_AVAILABLE = False
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QFileDialog,
     QFrame,
@@ -32,7 +33,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from pdf_converter.converter import convert_images_to_pdf, normalize_paths
+from pdf_converter.converter import classify_image_paths, convert_images_to_pdf
 
 
 class DropListWidget(QListWidget):
@@ -40,7 +41,12 @@ class DropListWidget(QListWidget):
         super().__init__()
         self.parent_window = parent
         self._drag_active = False
+        self.setDragEnabled(True)
         self.setAcceptDrops(True)
+        self.setDragDropMode(QAbstractItemView.DragDrop)
+        self.setDefaultDropAction(Qt.MoveAction)
+        self.setDropIndicatorShown(True)
+        self.setDragDropOverwriteMode(False)
         self.setSelectionMode(QListWidget.ExtendedSelection)
         self.setAlternatingRowColors(True)
         self.setSpacing(8)
@@ -146,14 +152,14 @@ class DropListWidget(QListWidget):
         )
 
     def dragEnterEvent(self, event) -> None:  # type: ignore[override]
-        if event.mimeData().hasUrls():
+        if event.source() is self or event.mimeData().hasUrls():
             self._set_drag_active(True)
             event.acceptProposedAction()
             return
         event.ignore()
 
     def dragMoveEvent(self, event) -> None:  # type: ignore[override]
-        if event.mimeData().hasUrls():
+        if event.source() is self or event.mimeData().hasUrls():
             self._set_drag_active(True)
             event.acceptProposedAction()
             return
@@ -164,11 +170,26 @@ class DropListWidget(QListWidget):
         super().dragLeaveEvent(event)
 
     def dropEvent(self, event) -> None:  # type: ignore[override]
+        if event.source() is self:
+            self._set_drag_active(False)
+            super().dropEvent(event)
+            self.parent_window.sync_image_order_from_list()
+            self.refresh_state()
+            event.acceptProposedAction()
+            return
+
         urls = event.mimeData().urls()
         paths = [url.toLocalFile() for url in urls if url.isLocalFile()]
         self._set_drag_active(False)
         self.parent_window.add_images(paths)
         event.acceptProposedAction()
+
+    def keyPressEvent(self, event) -> None:  # type: ignore[override]
+        if event.key() in (Qt.Key_Delete, Qt.Key_Backspace):
+            self.parent_window.remove_selected_images()
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
     def refresh_state(self) -> None:
         self._update_helper_visibility()
@@ -180,9 +201,15 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("PDF Converter")
         self.resize(960, 720)
         self.image_paths: list[Path] = []
+        self.last_saved_pdf: Path | None = None
         self.preview_pdf_path: Path | None = None
         self.pdf_document = QPdfDocument(self) if PDF_PREVIEW_AVAILABLE else None
         self.pdf_view: QPdfView | None = None
+        self.clear_action: QAction | None = None
+        self.remove_action: QAction | None = None
+        self.convert_button: QPushButton | None = None
+        self.remove_button: QPushButton | None = None
+        self.open_pdf_button: QPushButton | None = None
         self.setStyleSheet(self._build_stylesheet())
         self._build_ui()
         self._apply_window_icon()
@@ -379,10 +406,15 @@ class MainWindow(QMainWindow):
         add_action.triggered.connect(self.open_file_dialog)
         toolbar.addAction(add_action)
 
-        clear_action = QAction("목록 비우기", self)
-        clear_action.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
-        clear_action.triggered.connect(self.clear_images)
-        toolbar.addAction(clear_action)
+        self.remove_action = QAction("선택 삭제", self)
+        self.remove_action.setIcon(self.style().standardIcon(QStyle.SP_DialogDiscardButton))
+        self.remove_action.triggered.connect(self.remove_selected_images)
+        toolbar.addAction(self.remove_action)
+
+        self.clear_action = QAction("목록 비우기", self)
+        self.clear_action.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
+        self.clear_action.triggered.connect(self.clear_images)
+        toolbar.addAction(self.clear_action)
 
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -455,10 +487,17 @@ class MainWindow(QMainWindow):
         select_button.clicked.connect(self.open_file_dialog)
         drop_header.addWidget(select_button)
 
+        self.remove_button = QPushButton("선택 삭제")
+        self.remove_button.setObjectName("secondaryButton")
+        self.remove_button.setCursor(Qt.PointingHandCursor)
+        self.remove_button.clicked.connect(self.remove_selected_images)
+        drop_header.addWidget(self.remove_button)
+
         drop_layout.addLayout(drop_header)
 
         self.drop_list = DropListWidget(self)
         self.drop_list.setMinimumHeight(180)
+        self.drop_list.itemSelectionChanged.connect(self._refresh_ui_state)
         drop_layout.addWidget(self.drop_list)
 
         preview_title = QLabel("PDF 미리보기")
@@ -540,13 +579,20 @@ class MainWindow(QMainWindow):
         self.status_label.setWordWrap(True)
         info_layout.addWidget(self.status_label, stretch=1)
 
-        convert_button = QPushButton("PDF로 저장")
-        convert_button.setObjectName("primaryButton")
-        convert_button.setCursor(Qt.PointingHandCursor)
-        convert_button.setMinimumHeight(54)
-        convert_button.setMinimumWidth(220)
-        convert_button.clicked.connect(self.save_pdf)
-        info_layout.addWidget(convert_button)
+        self.open_pdf_button = QPushButton("PDF 열기")
+        self.open_pdf_button.setObjectName("secondaryButton")
+        self.open_pdf_button.setCursor(Qt.PointingHandCursor)
+        self.open_pdf_button.setMinimumHeight(54)
+        self.open_pdf_button.clicked.connect(self.open_saved_pdf)
+        info_layout.addWidget(self.open_pdf_button)
+
+        self.convert_button = QPushButton("PDF로 저장")
+        self.convert_button.setObjectName("primaryButton")
+        self.convert_button.setCursor(Qt.PointingHandCursor)
+        self.convert_button.setMinimumHeight(54)
+        self.convert_button.setMinimumWidth(220)
+        self.convert_button.clicked.connect(self.save_pdf)
+        info_layout.addWidget(self.convert_button)
 
         layout.addWidget(info_card)
 
@@ -608,13 +654,26 @@ class MainWindow(QMainWindow):
         self.pdf_view.show()
         self.pdf_view.pageNavigator().jump(0)
 
-    def _refresh_ui_state(self) -> None:
+    def _refresh_ui_state(self, status_message: str | None = None) -> None:
         count = len(self.image_paths)
         self.count_badge.setText(f"{count}개 이미지 준비됨")
         self.drop_list.refresh_state()
+        has_selection = bool(self.drop_list.selectedItems())
+        has_saved_pdf = self.last_saved_pdf is not None and self.last_saved_pdf.exists()
+
+        if self.convert_button is not None:
+            self.convert_button.setEnabled(count > 0)
+        if self.remove_button is not None:
+            self.remove_button.setEnabled(has_selection)
+        if self.remove_action is not None:
+            self.remove_action.setEnabled(has_selection)
+        if self.clear_action is not None:
+            self.clear_action.setEnabled(count > 0)
+        if self.open_pdf_button is not None:
+            self.open_pdf_button.setEnabled(has_saved_pdf)
 
         if count == 0:
-            self.status_label.setText("이미지를 추가해 주세요.")
+            self.status_label.setText(status_message or "이미지를 추가해 주세요.")
             self.preview_label.setText("PDF PREVIEW")
             self.preview_title.setText("이미지를 추가하면 실제 PDF가 미리 표시됩니다")
             self.preview_body.setText(
@@ -628,7 +687,8 @@ class MainWindow(QMainWindow):
             return
 
         self.status_label.setText(
-            f"현재 {count}개 이미지가 준비되었습니다. 첫 번째 이미지 폴더를 기본 저장 위치로 사용합니다."
+            status_message
+            or f"현재 {count}개 이미지가 준비되었습니다. 첫 번째 이미지 폴더를 기본 저장 위치로 사용합니다."
         )
         self.preview_label.setText(f"PDF PREVIEW · {count} PAGE{'S' if count > 1 else ''}")
         self.preview_title.setText(f"{count}장의 이미지가 순서대로 PDF 페이지로 저장됩니다")
@@ -649,23 +709,39 @@ class MainWindow(QMainWindow):
         self.add_images(files)
 
     def add_images(self, raw_paths: list[str]) -> None:
-        new_paths = normalize_paths(raw_paths)
-        existing = set(self.image_paths)
+        new_paths, duplicate_count, unsupported_count = classify_image_paths(
+            raw_paths,
+            existing_paths=self.image_paths,
+        )
 
-        added_count = 0
         for path in new_paths:
-            if path in existing:
-                continue
-
             self.image_paths.append(path)
             item = QListWidgetItem(path.name)
             item.setToolTip(str(path))
+            item.setData(Qt.UserRole, str(path))
             self.drop_list.addItem(item)
-            existing.add(path)
-            added_count += 1
+
+        added_count = len(new_paths)
 
         if added_count == 0 and raw_paths:
-            self.status_label.setText("추가 가능한 새 이미지가 없었습니다.")
+            if unsupported_count > 0 and duplicate_count > 0:
+                message = "지원되지 않는 파일과 중복 파일은 추가되지 않았습니다."
+            elif unsupported_count > 0:
+                message = "지원되지 않는 파일은 추가되지 않았습니다."
+            elif duplicate_count > 0:
+                message = "이미 목록에 있는 파일은 다시 추가하지 않았습니다."
+            else:
+                message = "추가 가능한 이미지 파일이 없습니다."
+            self._refresh_ui_state(message)
+            return
+
+        if duplicate_count > 0 or unsupported_count > 0:
+            feedback: list[str] = [f"{added_count}개 이미지 추가됨"]
+            if duplicate_count > 0:
+                feedback.append(f"중복 {duplicate_count}개 제외")
+            if unsupported_count > 0:
+                feedback.append(f"지원 불가 {unsupported_count}개 제외")
+            self._refresh_ui_state(" / ".join(feedback))
             return
 
         self._refresh_ui_state()
@@ -673,7 +749,53 @@ class MainWindow(QMainWindow):
     def clear_images(self) -> None:
         self.image_paths.clear()
         self.drop_list.clear()
+        self.drop_list.clearSelection()
         self._refresh_ui_state()
+
+    def remove_selected_images(self) -> None:
+        selected_items = self.drop_list.selectedItems()
+        if not selected_items:
+            self._refresh_ui_state()
+            return
+
+        selected_paths = {
+            Path(item.data(Qt.UserRole))
+            for item in selected_items
+            if item.data(Qt.UserRole)
+        }
+
+        for item in selected_items:
+            row = self.drop_list.row(item)
+            self.drop_list.takeItem(row)
+
+        self.image_paths = [path for path in self.image_paths if path not in selected_paths]
+        self._refresh_ui_state(f"{len(selected_items)}개 항목을 목록에서 제거했습니다.")
+
+    def sync_image_order_from_list(self) -> None:
+        reordered_paths: list[Path] = []
+        for index in range(self.drop_list.count()):
+            item = self.drop_list.item(index)
+            raw_path = item.data(Qt.UserRole)
+            if raw_path:
+                reordered_paths.append(Path(raw_path))
+
+        if reordered_paths:
+            self.image_paths = reordered_paths
+            self._refresh_ui_state("이미지 순서를 업데이트했습니다.")
+            return
+        self._refresh_ui_state()
+
+    def open_saved_pdf(self) -> None:
+        if self.last_saved_pdf is None or not self.last_saved_pdf.exists():
+            QMessageBox.information(self, "열 수 있는 PDF 없음", "먼저 PDF를 저장해 주세요.")
+            self._refresh_ui_state()
+            return
+
+        if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.last_saved_pdf))):
+            QMessageBox.warning(self, "열기 실패", "기본 PDF 앱으로 파일을 열지 못했습니다.")
+            return
+
+        self._refresh_ui_state(f"저장된 PDF 열기: {self.last_saved_pdf.name}")
 
     def save_pdf(self) -> None:
         if not self.image_paths:
@@ -698,13 +820,14 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "변환 실패", f"PDF 변환 중 오류가 발생했습니다.\n{error}")
             return
 
+        self.last_saved_pdf = saved_path
         QMessageBox.information(self, "변환 완료", f"PDF 저장 완료:\n{saved_path}")
-        self.status_label.setText(f"저장 완료: {saved_path.name}")
         self.preview_title.setText(f"{saved_path.name} 실제 PDF 미리보기")
         self.preview_body.setText(
             f"방금 저장한 PDF는 총 {len(self.image_paths)}페이지 기준으로 생성되었습니다. 아래 미리보기와 같은 내용으로 저장됩니다."
         )
         self._refresh_pdf_preview()
+        self._refresh_ui_state(f"저장 완료: {saved_path.name}")
 
     def closeEvent(self, event) -> None:  # type: ignore[override]
         self._clear_pdf_preview()

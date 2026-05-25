@@ -1,17 +1,18 @@
 # PDF Converter
 
-여러 이미지를 드래그앤드롭으로 불러와 하나의 PDF로 변환하는 Windows GUI 프로그램입니다.
+A simple Windows desktop app for converting multiple images into a single PDF.
 
-## 주요 기능
+## What This App Does
 
-- 여러 이미지 파일을 한 번에 PDF로 변환
-- 드래그앤드롭 기반 GUI
-- 실제 PDF 전체 페이지 미리보기
-- 모든 페이지를 `A4` 기준으로 정렬
-- 단일 실행 파일(`.exe`) 빌드 지원
-- 설치형 Windows 앱(`Setup.exe`) 패키징 지원
+- Drag and drop multiple images into the app
+- Reorder images before saving
+- Remove selected items
+- Skip duplicate or unsupported files automatically
+- Preview the generated PDF
+- Open the saved PDF directly after export
+- Export pages in A4 layout
 
-## 지원 형식
+## Supported Image Formats
 
 - `JPG`
 - `JPEG`
@@ -21,104 +22,158 @@
 - `WEBP`
 - `GIF`
 
-## 동작 방식
+## Easiest Option for End Users
 
-- 추가한 이미지는 입력 순서대로 PDF 페이지가 됩니다.
-- 각 페이지는 `A4 크기`에 맞춰 저장됩니다.
-- 이미지 비율은 유지됩니다.
-- 비율 차이로 남는 영역은 일반적인 문서 도구처럼 `흰 여백`으로 처리됩니다.
+If you just want to use the app, do not build it yourself.
 
-## 기술 스택
+Download one of these files from the GitHub `Releases` page:
 
-- `Python 3.14`
-- `PySide6`
-- `img2pdf`
-- `Pillow`
-- `PyInstaller`
-- `Inno Setup 6`
+- `PDFConverter-Setup.exe`
+  Recommended for most users. Installs the app normally.
+- `PDFConverter.exe`
+  Portable version. Runs without installation.
 
-## 프로젝트 구조
+## Run Locally
 
-```text
-pdf_converter/
-├─ app.py
-├─ build_exe.ps1
-├─ build_installer.ps1
-├─ requirements.txt
-├─ assets/
-├─ installer/
-├─ pdf_converter/
-│  ├─ app.py
-│  ├─ converter.py
-│  └─ __init__.py
-└─ docs/
-```
-
-## 로컬 실행
+Open **PowerShell** and paste the commands below exactly.
 
 ```powershell
-py -3.14 -m venv .venv
+cd "C:\path\to\pdf_converter-main"
+py -3 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 python app.py
 ```
 
-## 단일 실행 파일 빌드
+If `py` is not available on your machine, try:
 
 ```powershell
+cd "C:\path\to\pdf_converter-main"
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python app.py
+```
+
+## Build the EXE Locally
+
+This creates:
+
+- `release\PDFConverter.exe`
+
+Paste this into **PowerShell**:
+
+```powershell
+cd "C:\path\to\pdf_converter-main"
 powershell -ExecutionPolicy Bypass -File .\build_exe.ps1
 ```
 
-생성 결과:
+## Build the Full Release Locally
 
-- `release/PDFConverter.exe`
+This creates:
 
-이 파일은 설치 없이 바로 실행할 수 있습니다.
+- `release\PDFConverter.exe`
+- `release\PDFConverter-Setup.exe` if `Inno Setup 6` is installed
 
-## 설치형 앱 빌드
+### Option 1: Double-click
 
-설치형 패키지를 만들려면 `Inno Setup 6`가 필요합니다.
+Double-click:
+
+- `build_release.bat`
+
+### Option 2: PowerShell
+
+Paste this into **PowerShell**:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\build_installer.ps1
+cd "C:\path\to\pdf_converter-main"
+powershell -ExecutionPolicy Bypass -File .\build_release.ps1
 ```
 
-생성 결과:
+To build only the EXE and skip the installer:
 
-- `release/PDFConverter-Setup.exe`
+```powershell
+cd "C:\path\to\pdf_converter-main"
+powershell -ExecutionPolicy Bypass -File .\build_release.ps1 -SkipInstaller
+```
 
-이 파일은 일반 Windows 프로그램처럼 설치할 수 있습니다.
+## Installer Build Requirement
 
-## 아이콘
+To create `PDFConverter-Setup.exe`, you need `Inno Setup 6`.
 
-앱 아이콘 자산은 아래 파일을 사용합니다.
+The script tries these locations automatically:
 
-- `assets/app_icon.png`
-- `assets/app_icon.ico`
+- `%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe`
+- `%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe`
+- `%ProgramFiles%\Inno Setup 6\ISCC.exe`
+- `ISCC.exe` from your `PATH`
 
-현재 아이콘 컨셉:
+If needed, you can pass the compiler path manually:
 
-- `A4 문서`
-- `이미지 프레임`
-- `PDF 배지`
-- 파란 계열 중심의 UI 톤 통일
+```powershell
+cd "C:\path\to\pdf_converter-main"
+powershell -ExecutionPolicy Bypass -File .\build_installer.ps1 -InnoSetupCompiler "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+```
 
-아이콘만 교체하고 싶다면 `assets/app_icon.ico`를 새 파일로 바꾸면 됩니다.
+## GitHub Automatic Build and Release
 
-## 배포 권장 방식
+This repository includes a GitHub Actions workflow:
 
-사용자에게 공유할 때는 보통 아래 둘 중 하나를 배포하면 됩니다.
+- `.github/workflows/windows-release.yml`
 
-- `release/PDFConverter.exe`
-  설치 없이 바로 실행
-- `release/PDFConverter-Setup.exe`
-  설치 후 시작 메뉴에서 실행
+It automatically:
 
-일반 사용자 배포에는 `PDFConverter-Setup.exe`가 더 친숙합니다.
+- sets up Python on a Windows runner
+- installs Inno Setup
+- builds the EXE and installer
+- uploads build artifacts
+- publishes release files when you push a version tag
 
-## 개발 메모
+### Manual workflow run
 
-- PDF 미리보기는 `PySide6 QtPdf` 모듈을 사용합니다.
-- 빌드 산출물은 `release/`에 모입니다.
-- 빌드 중 Windows 잠금 파일이 남을 수 있어, 임시 `.tmp` 파일은 Git에 포함하지 않습니다.
+You can also run the workflow manually from the GitHub Actions tab.
+
+### Create a versioned GitHub release
+
+Paste these commands into **PowerShell**:
+
+```powershell
+cd "C:\path\to\pdf_converter-main"
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+After that, GitHub Actions builds the release files and attaches them to the GitHub `Releases` page.
+
+## Recommended Release Flow
+
+For sharing with other people, this is the easiest process:
+
+1. Push your latest code to GitHub.
+2. Create and push a version tag such as `v1.0.0`.
+3. Wait for the GitHub Actions workflow to finish.
+4. Share `PDFConverter-Setup.exe` from the GitHub `Releases` page.
+
+## Project Structure
+
+```text
+pdf_converter-main/
+├─ app.py
+├─ build_exe.ps1
+├─ build_installer.ps1
+├─ build_release.ps1
+├─ build_release.bat
+├─ requirements.txt
+├─ assets/
+├─ installer/
+├─ pdf_converter/
+└─ .github/workflows/
+```
+
+## Notes
+
+- The build scripts create `.venv` automatically if it does not exist.
+- `build_release.bat` is included for people who do not want to deal with PowerShell execution policy manually.
+- The recommended file for non-technical users is `PDFConverter-Setup.exe`.
