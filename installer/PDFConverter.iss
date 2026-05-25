@@ -1,4 +1,4 @@
-﻿#define MyAppName "PDF Converter"
+﻿#define MyAppName "PDF Toolkit"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "LeeInpyo"
 #define MyAppExeName "PDFConverter.exe"
@@ -42,3 +42,4 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
+

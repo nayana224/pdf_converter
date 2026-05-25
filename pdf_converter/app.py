@@ -139,7 +139,7 @@ class DropListWidget(QListWidget):
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("PDF Converter")
+        self.setWindowTitle("PDF Toolkit")
         self.resize(980, 760)
         self.mode = MODE_IMAGE_TO_PDF
         self.input_paths: list[Path] = []
@@ -682,3 +682,4 @@ def main() -> int:
     window = MainWindow()
     window.show()
     return app.exec()
+

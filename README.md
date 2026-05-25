@@ -1,4 +1,4 @@
-﻿# PDF Converter
+﻿# PDF Toolkit
 
 Convert images to PDF and merge PDF files on Windows.
 
@@ -14,7 +14,7 @@ Steps:
 
 1. Download `PDFConverter-Setup.exe` from the latest release.
 2. Run the installer.
-3. Launch `PDF Converter` from the Start menu or desktop shortcut.
+3. Launch `PDF Toolkit` from the Start menu or desktop shortcut.
 
 Portable option:
 
@@ -172,3 +172,4 @@ pdf_converter-main/
 ├─ pdf_converter/
 └─ .github/workflows/
 ```
+
