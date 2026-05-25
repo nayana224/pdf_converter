@@ -1,6 +1,6 @@
 ﻿# PDF Toolkit
 
-Convert images to PDF and merge PDF files on Windows.
+Convert images to PDF, merge PDF files, and split one PDF into separate page files on Windows.
 
 ## Quick Start
 
@@ -25,12 +25,13 @@ Portable option:
 
 - Convert multiple images into one PDF
 - Merge multiple PDF files into one PDF
+- Split one PDF into separate page PDF files
 - Drag and drop files into the app
 - Reorder files before saving
 - Remove selected items
 - Skip duplicate files automatically
 - Preview the output PDF inside the app
-- Show progress feedback during export and merge
+- Show progress feedback during export, merge, and split
 
 ## Supported Input Types
 
@@ -172,5 +173,3 @@ pdf_converter-main/
 ├─ pdf_converter/
 └─ .github/workflows/
 ```
-
-

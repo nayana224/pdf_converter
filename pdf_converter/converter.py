@@ -114,6 +114,12 @@ def validate_pdfs(
             pass
 
 
+def get_pdf_page_count(pdf_path: str | Path) -> int:
+    path = Path(pdf_path).expanduser().resolve()
+    with pikepdf.Pdf.open(path) as pdf:
+        return len(pdf.pages)
+
+
 def convert_images_to_pdf(
     image_paths: Iterable[Path],
     output_path: str | Path,
@@ -161,7 +167,7 @@ def merge_pdfs(
     destination = Path(output_path).expanduser().resolve()
     destination.parent.mkdir(parents=True, exist_ok=True)
 
-    _report_progress(progress_callback, len(normalized) + 1, total_steps, "Merging PDF pages...")
+    _report_progress(progress_callback, total_steps, total_steps, "Merging PDF pages...")
     merged_pdf = pikepdf.Pdf.new()
 
     for path in normalized:
@@ -170,3 +176,36 @@ def merge_pdfs(
 
     merged_pdf.save(destination)
     return destination
+
+
+def split_pdf(
+    pdf_paths: Iterable[Path],
+    output_dir: str | Path,
+    progress_callback: ProgressCallback | None = None,
+) -> Path:
+    normalized, _, _ = classify_pdf_paths(pdf_paths)
+    if len(normalized) != 1:
+        raise ValueError("Exactly one PDF file is required for split.")
+
+    source_path = normalized[0]
+    validate_pdfs([source_path], progress_callback=progress_callback)
+
+    destination_dir = Path(output_dir).expanduser().resolve()
+    destination_dir.mkdir(parents=True, exist_ok=True)
+
+    with pikepdf.Pdf.open(source_path) as source_pdf:
+        page_count = len(source_pdf.pages)
+        total_steps = page_count + 1
+
+        for page_index, page in enumerate(source_pdf.pages, start=1):
+            _report_progress(
+                progress_callback,
+                page_index + 1,
+                total_steps,
+                f"Saving split page {page_index}/{page_count}...",
+            )
+            split_document = pikepdf.Pdf.new()
+            split_document.pages.append(page)
+            split_document.save(destination_dir / f"{source_path.stem}-page-{page_index:03d}.pdf")
+
+    return destination_dir

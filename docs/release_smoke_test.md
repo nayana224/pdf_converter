@@ -24,7 +24,18 @@
 - Open the merged PDF from the app.
 - Confirm the preview appears when 2 or more PDFs are present.
 
-## 3. Progress Feedback
+## 3. PDF Split
+
+- Switch to `PDF 분할` mode.
+- Add 1 PDF file.
+- Try adding a second PDF and confirm the app blocks it clearly.
+- Remove the selected PDF and add a different PDF.
+- Start the split flow and choose a destination folder.
+- Confirm one PDF file per page is created in the output folder.
+- Open the created result folder from the app.
+- Confirm the original PDF preview appears when 1 PDF is selected.
+
+## 4. Progress Feedback
 
 - Start an image-to-PDF export with several files.
 - Confirm the progress bar becomes visible.
@@ -32,11 +43,10 @@
 - Confirm action buttons are disabled while processing.
 - Confirm the UI returns to normal after success or failure.
 
-## 4. Packaging
+## 5. Packaging
 
 - Run `build_release.bat`.
 - Confirm `release/PDFToolkit.exe` is created.
 - Confirm `release/PDFToolkit-Setup.exe` is created when Inno Setup is installed.
 - Launch the packaged EXE.
-- Verify both modes open and basic actions still work.
-
+- Verify all three modes open and basic actions still work.
