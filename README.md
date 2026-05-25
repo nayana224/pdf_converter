@@ -1,76 +1,40 @@
 ﻿# PDF Converter
 
-A simple Windows desktop app for two common local PDF tasks:
+Convert images to PDF and merge PDF files on Windows.
 
-- convert multiple images into one PDF
-- merge multiple PDF files into one PDF
+## Quick Start
 
-## For Normal Users
+If you just want to use the app, download it from the GitHub `Releases` page.
 
-If you only want to use the app, do not build it yourself.
-
-Download one of these files from the GitHub `Releases` page:
+Recommended file:
 
 - `PDFConverter-Setup.exe`
-  Recommended for most users. This is the standard installer.
+
+Steps:
+
+1. Download `PDFConverter-Setup.exe` from the latest release.
+2. Run the installer.
+3. Launch `PDF Converter` from the Start menu or desktop shortcut.
+
+Portable option:
+
 - `PDFConverter.exe`
-  Portable version. Runs without installation.
+  Use this if you want to run the app without installing it.
 
-### Recommended option
+## Main Features
 
-Use `PDFConverter-Setup.exe`.
+- Convert multiple images into one PDF
+- Merge multiple PDF files into one PDF
+- Drag and drop files into the app
+- Reorder files before saving
+- Remove selected items
+- Skip duplicate files automatically
+- Preview the output PDF inside the app
+- Show progress feedback during export and merge
 
-Why:
+## Supported Input Types
 
-- easier for non-technical users
-- normal install/uninstall flow
-- desktop shortcut option
-- easier to replace with a newer version later
-
-### Updating to a newer version
-
-The normal update path is simple:
-
-1. Close the app if it is running.
-2. Run the new `PDFConverter-Setup.exe`.
-3. Complete the installer.
-
-The installer is configured to reuse the previous install location and to close the running app when possible.
-
-## Features
-
-### Image to PDF
-
-- drag and drop image files
-- add files from a file picker
-- reorder items before export
-- remove selected items
-- skip duplicate files automatically
-- skip unsupported files automatically
-- preview the generated PDF
-- open the saved PDF from the app
-- export with an A4-based layout
-
-### PDF Merge
-
-- drag and drop PDF files
-- add PDF files from a file picker
-- reorder PDFs before merge
-- remove selected items
-- skip duplicate files automatically
-- block merge when fewer than 2 PDFs are selected
-- preview the merged result
-- open the merged PDF from the app
-
-### In-App Feedback
-
-- progress bar during export and merge
-- status text updates during processing
-- action buttons disabled while processing
-
-## Supported File Types
-
-### Image input
+### Images
 
 - `JPG`
 - `JPEG`
@@ -80,11 +44,28 @@ The installer is configured to reuse the previous install location and to close 
 - `WEBP`
 - `GIF`
 
-### PDF input
+### PDF
 
 - `PDF`
 
-## Run Locally
+## Download Options
+
+- `PDFConverter-Setup.exe`
+  Recommended for most users. Installs the app normally.
+- `PDFConverter.exe`
+  Portable version. Runs without installation.
+
+## Updating to a New Version
+
+1. Close the app if it is running.
+2. Download the newest `PDFConverter-Setup.exe` from `Releases`.
+3. Run the installer again.
+
+The installer is configured to reuse the previous install location and close the app when possible.
+
+## For Developers
+
+### Run Locally
 
 Open **PowerShell** and paste the commands below exactly.
 
@@ -108,13 +89,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-## Build the EXE Locally
-
-This creates:
-
-- `release\PDFConverter.exe`
-
-Paste this into **PowerShell**:
+### Build the EXE Locally
 
 ```powershell
 cd "C:\path\to\pdf_converter-main"
@@ -123,28 +98,13 @@ powershell -ExecutionPolicy Bypass -File .\build_exe.ps1
 
 If the build says the output file is locked, close any running `PDFConverter.exe` window and try again.
 
-## Build the Full Release Locally
-
-This creates:
-
-- `release\PDFConverter.exe`
-- `release\PDFConverter-Setup.exe` if `Inno Setup 6` is installed
-
-### Option 1: Double-click
+### Build the Full Release Locally
 
 Double-click:
 
 - `build_release.bat`
 
-This will:
-
-- run the full release build
-- keep the console open if the build fails
-- open the `release` folder automatically when the build succeeds
-
-### Option 2: PowerShell
-
-Paste this into **PowerShell**:
+Or run:
 
 ```powershell
 cd "C:\path\to\pdf_converter-main"
@@ -158,16 +118,9 @@ cd "C:\path\to\pdf_converter-main"
 powershell -ExecutionPolicy Bypass -File .\build_release.ps1 -SkipInstaller
 ```
 
-## Installer Build Requirement
+### Installer Build Requirement
 
 To create `PDFConverter-Setup.exe`, you need `Inno Setup 6`.
-
-The script tries these locations automatically:
-
-- `%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe`
-- `%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe`
-- `%ProgramFiles%\Inno Setup 6\ISCC.exe`
-- `ISCC.exe` from your `PATH`
 
 If needed, you can pass the compiler path manually:
 
@@ -176,38 +129,27 @@ cd "C:\path\to\pdf_converter-main"
 powershell -ExecutionPolicy Bypass -File .\build_installer.ps1 -InnoSetupCompiler "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 ```
 
-## GitHub Automatic Build and Release
+### GitHub Actions Release Flow
 
 This repository includes a GitHub Actions workflow:
 
 - `.github/workflows/windows-release.yml`
 
-It automatically:
-
-- sets up Python on a Windows runner
-- installs Inno Setup
-- builds the EXE and installer
-- uploads build artifacts
-- publishes release files when you push a version tag
-
-### Create a versioned GitHub release
-
-Paste these commands into **PowerShell**:
+Typical release flow:
 
 ```powershell
 cd "C:\path\to\pdf_converter-main"
+git push origin main
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-After that, GitHub Actions builds the release files and attaches them to the GitHub `Releases` page.
+That workflow builds:
 
-## Recommended Release Flow
+- `PDFConverter.exe`
+- `PDFConverter-Setup.exe`
 
-1. Push your latest code to GitHub.
-2. Create and push a version tag such as `v1.0.0`.
-3. Wait for the GitHub Actions workflow to finish.
-4. Share `PDFConverter-Setup.exe` from the GitHub `Releases` page.
+and attaches them to the GitHub `Releases` page.
 
 ## Related Docs
 
@@ -230,9 +172,3 @@ pdf_converter-main/
 ├─ pdf_converter/
 └─ .github/workflows/
 ```
-
-## Notes
-
-- The build scripts create `.venv` automatically if it does not exist.
-- `build_release.bat` is included for people who do not want to deal with PowerShell execution policy manually.
-- The recommended file for non-technical users is `PDFConverter-Setup.exe`.
