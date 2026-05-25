@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$PythonCommand = "",
     [switch]$Clean
 )
@@ -39,7 +39,7 @@ function Resolve-PythonCommand {
         }
     }
 
-    throw "Python 3.11 이상이 필요합니다. Python을 설치한 뒤 다시 시도해 주세요."
+    throw "Python 3.11 or newer is required. Install Python and try again."
 }
 
 function Invoke-Python {
@@ -59,7 +59,7 @@ function Invoke-Python {
 
     & $exe @prefix @Arguments
     if ($LASTEXITCODE -ne 0) {
-        throw "명령 실행 실패: $Command $($Arguments -join ' ')"
+        throw "Command failed: $Command $($Arguments -join ' ')"
     }
 }
 
@@ -79,14 +79,14 @@ $finalExePath = Join-Path $releaseDir "PDFConverter.exe"
 $iconPath = Join-Path $projectRoot "assets\app_icon.ico"
 
 if (-not (Test-Path $pythonExe)) {
-    Write-Host "[1/5] 가상환경 생성 중..."
+    Write-Host "[1/5] Creating virtual environment..."
     Invoke-Python $pythonCommandResolved -m venv $venvDir
 }
 else {
-    Write-Host "[1/5] 기존 가상환경 재사용 중..."
+    Write-Host "[1/5] Reusing existing virtual environment..."
 }
 
-Write-Host "[2/5] 빌드 도구 설치/업데이트 중..."
+Write-Host "[2/5] Installing or updating build tools..."
 Invoke-Python $pythonExe -m pip install --upgrade pip
 Invoke-Python $pythonExe -m pip install -r requirements.txt pyinstaller
 
@@ -111,7 +111,7 @@ if (Test-Path $iconPath) {
     $iconArgs = @("--icon", $iconPath)
 }
 
-Write-Host "[3/5] PyInstaller 빌드 중..."
+Write-Host "[3/5] Building with PyInstaller..."
 & $pyInstallerExe `
     --noconfirm `
     --clean `
@@ -124,11 +124,11 @@ Write-Host "[3/5] PyInstaller 빌드 중..."
     @iconArgs `
     app.py
 if ($LASTEXITCODE -ne 0) {
-    throw "PyInstaller 빌드에 실패했습니다."
+    throw "PyInstaller build failed."
 }
 
-Write-Host "[4/5] 결과 파일 정리 중..."
+Write-Host "[4/5] Copying final executable..."
 Copy-Item -LiteralPath (Join-Path $distPath "PDFConverter.exe") -Destination $finalExePath -Force
 
-Write-Host "[5/5] 완료"
-Write-Host "생성 파일: $finalExePath"
+Write-Host "[5/5] Done"
+Write-Host "Created file: $finalExePath"

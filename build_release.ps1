@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$SkipInstaller,
     [string]$PythonCommand = "",
     [string]$InnoSetupCompiler = ""
@@ -10,7 +10,7 @@ Set-StrictMode -Version Latest
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $projectRoot
 
-Write-Host "PDF Converter 배포 빌드를 시작합니다."
+Write-Host "Starting PDF Converter release build..."
 
 $exeArgs = @()
 if ($PythonCommand) {
@@ -19,11 +19,11 @@ if ($PythonCommand) {
 
 powershell -ExecutionPolicy Bypass -File (Join-Path $projectRoot "build_exe.ps1") @exeArgs
 if ($LASTEXITCODE -ne 0) {
-    throw "EXE 빌드에 실패했습니다."
+    throw "EXE build failed."
 }
 
 if ($SkipInstaller) {
-    Write-Host "설치 파일 빌드는 건너뛰었습니다."
+    Write-Host "Installer build skipped."
     exit 0
 }
 
@@ -34,7 +34,7 @@ if ($InnoSetupCompiler) {
 
 powershell -ExecutionPolicy Bypass -File (Join-Path $projectRoot "build_installer.ps1") @installerArgs
 if ($LASTEXITCODE -ne 0) {
-    throw "설치 파일 빌드에 실패했습니다."
+    throw "Installer build failed."
 }
 
-Write-Host "배포 빌드가 완료되었습니다. release 폴더를 확인해 주세요."
+Write-Host "Release build complete. Check the release folder."
