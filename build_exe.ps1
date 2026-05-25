@@ -63,6 +63,28 @@ function Invoke-Python {
     }
 }
 
+function Remove-OldFileIfPossible {
+    param([string]$PathToRemove)
+
+    if (-not (Test-Path $PathToRemove)) {
+        return
+    }
+
+    try {
+        Remove-Item -LiteralPath $PathToRemove -Force
+    }
+    catch {
+        throw @"
+The existing output file is locked and could not be replaced:
+$PathToRemove
+
+Please close PDFConverter.exe if it is still running,
+close any Explorer window previewing the file,
+and run the build again.
+"@
+    }
+}
+
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $projectRoot
 
@@ -102,9 +124,7 @@ if (-not (Test-Path $releaseDir)) {
     New-Item -ItemType Directory -Path $releaseDir | Out-Null
 }
 
-if (Test-Path $finalExePath) {
-    Remove-Item -LiteralPath $finalExePath -Force
-}
+Remove-OldFileIfPossible -PathToRemove $finalExePath
 
 $iconArgs = @()
 if (Test-Path $iconPath) {

@@ -1,18 +1,76 @@
-# PDF Converter
+﻿# PDF Converter
 
-A simple Windows desktop app for converting multiple images into a single PDF.
+A simple Windows desktop app for two common local PDF tasks:
 
-## What This App Does
+- convert multiple images into one PDF
+- merge multiple PDF files into one PDF
 
-- Drag and drop multiple images into the app
-- Reorder images before saving
-- Remove selected items
-- Skip duplicate or unsupported files automatically
-- Preview the generated PDF
-- Open the saved PDF directly after export
-- Export pages in A4 layout
+## For Normal Users
 
-## Supported Image Formats
+If you only want to use the app, do not build it yourself.
+
+Download one of these files from the GitHub `Releases` page:
+
+- `PDFConverter-Setup.exe`
+  Recommended for most users. This is the standard installer.
+- `PDFConverter.exe`
+  Portable version. Runs without installation.
+
+### Recommended option
+
+Use `PDFConverter-Setup.exe`.
+
+Why:
+
+- easier for non-technical users
+- normal install/uninstall flow
+- desktop shortcut option
+- easier to replace with a newer version later
+
+### Updating to a newer version
+
+The normal update path is simple:
+
+1. Close the app if it is running.
+2. Run the new `PDFConverter-Setup.exe`.
+3. Complete the installer.
+
+The installer is configured to reuse the previous install location and to close the running app when possible.
+
+## Features
+
+### Image to PDF
+
+- drag and drop image files
+- add files from a file picker
+- reorder items before export
+- remove selected items
+- skip duplicate files automatically
+- skip unsupported files automatically
+- preview the generated PDF
+- open the saved PDF from the app
+- export with an A4-based layout
+
+### PDF Merge
+
+- drag and drop PDF files
+- add PDF files from a file picker
+- reorder PDFs before merge
+- remove selected items
+- skip duplicate files automatically
+- block merge when fewer than 2 PDFs are selected
+- preview the merged result
+- open the merged PDF from the app
+
+### In-App Feedback
+
+- progress bar during export and merge
+- status text updates during processing
+- action buttons disabled while processing
+
+## Supported File Types
+
+### Image input
 
 - `JPG`
 - `JPEG`
@@ -22,16 +80,9 @@ A simple Windows desktop app for converting multiple images into a single PDF.
 - `WEBP`
 - `GIF`
 
-## Easiest Option for End Users
+### PDF input
 
-If you just want to use the app, do not build it yourself.
-
-Download one of these files from the GitHub `Releases` page:
-
-- `PDFConverter-Setup.exe`
-  Recommended for most users. Installs the app normally.
-- `PDFConverter.exe`
-  Portable version. Runs without installation.
+- `PDF`
 
 ## Run Locally
 
@@ -70,6 +121,8 @@ cd "C:\path\to\pdf_converter-main"
 powershell -ExecutionPolicy Bypass -File .\build_exe.ps1
 ```
 
+If the build says the output file is locked, close any running `PDFConverter.exe` window and try again.
+
 ## Build the Full Release Locally
 
 This creates:
@@ -82,6 +135,12 @@ This creates:
 Double-click:
 
 - `build_release.bat`
+
+This will:
+
+- run the full release build
+- keep the console open if the build fails
+- open the `release` folder automatically when the build succeeds
 
 ### Option 2: PowerShell
 
@@ -131,10 +190,6 @@ It automatically:
 - uploads build artifacts
 - publishes release files when you push a version tag
 
-### Manual workflow run
-
-You can also run the workflow manually from the GitHub Actions tab.
-
 ### Create a versioned GitHub release
 
 Paste these commands into **PowerShell**:
@@ -149,12 +204,15 @@ After that, GitHub Actions builds the release files and attaches them to the Git
 
 ## Recommended Release Flow
 
-For sharing with other people, this is the easiest process:
-
 1. Push your latest code to GitHub.
 2. Create and push a version tag such as `v1.0.0`.
 3. Wait for the GitHub Actions workflow to finish.
 4. Share `PDFConverter-Setup.exe` from the GitHub `Releases` page.
+
+## Related Docs
+
+- `docs/pdf_converter.md`
+- `docs/release_smoke_test.md`
 
 ## Project Structure
 
@@ -167,6 +225,7 @@ pdf_converter-main/
 ├─ build_release.bat
 ├─ requirements.txt
 ├─ assets/
+├─ docs/
 ├─ installer/
 ├─ pdf_converter/
 └─ .github/workflows/

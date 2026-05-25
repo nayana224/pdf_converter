@@ -1,13 +1,15 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Iterable
 
 import img2pdf
+import pikepdf
 from PIL import Image
 
+ProgressCallback = Callable[[int, int, str], None]
 
-SUPPORTED_EXTENSIONS = {
+SUPPORTED_IMAGE_EXTENSIONS = {
     ".bmp",
     ".gif",
     ".jpeg",
@@ -17,6 +19,7 @@ SUPPORTED_EXTENSIONS = {
     ".tiff",
     ".webp",
 }
+SUPPORTED_PDF_EXTENSIONS = {".pdf"}
 
 A4_PAGE_SIZE_PT = (img2pdf.mm_to_pt(210), img2pdf.mm_to_pt(297))
 A4_MARGIN_MM = (10, 10)
@@ -24,12 +27,17 @@ A4_MARGIN_PT = tuple(img2pdf.mm_to_pt(value) for value in A4_MARGIN_MM)
 
 
 def is_supported_image(path: Path) -> bool:
-    return path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS
+    return path.is_file() and path.suffix.lower() in SUPPORTED_IMAGE_EXTENSIONS
 
 
-def classify_image_paths(
+def is_supported_pdf(path: Path) -> bool:
+    return path.is_file() and path.suffix.lower() in SUPPORTED_PDF_EXTENSIONS
+
+
+def _classify_paths(
     paths: Iterable[str | Path],
-    existing_paths: Iterable[Path] = (),
+    existing_paths: Iterable[Path],
+    validator: Callable[[Path], bool],
 ) -> tuple[list[Path], int, int]:
     unique_paths: list[Path] = []
     seen: set[Path] = set(existing_paths)
@@ -41,7 +49,7 @@ def classify_image_paths(
         if path in seen:
             duplicate_count += 1
             continue
-        if not is_supported_image(path):
+        if not validator(path):
             unsupported_count += 1
             continue
 
@@ -51,23 +59,74 @@ def classify_image_paths(
     return unique_paths, duplicate_count, unsupported_count
 
 
+def classify_image_paths(
+    paths: Iterable[str | Path],
+    existing_paths: Iterable[Path] = (),
+) -> tuple[list[Path], int, int]:
+    return _classify_paths(paths, existing_paths, is_supported_image)
+
+
+def classify_pdf_paths(
+    paths: Iterable[str | Path],
+    existing_paths: Iterable[Path] = (),
+) -> tuple[list[Path], int, int]:
+    return _classify_paths(paths, existing_paths, is_supported_pdf)
+
+
 def normalize_paths(paths: Iterable[str | Path]) -> list[Path]:
-    unique_paths, _, _ = classify_image_paths(paths)
+    unique_paths, _, _ = _classify_paths(paths, (), lambda path: path.is_file())
     return unique_paths
 
 
-def validate_images(paths: Iterable[Path]) -> None:
-    for path in paths:
+def _report_progress(
+    callback: ProgressCallback | None,
+    current: int,
+    total: int,
+    message: str,
+) -> None:
+    if callback is not None:
+        callback(current, total, message)
+
+
+def validate_images(
+    paths: Iterable[Path],
+    progress_callback: ProgressCallback | None = None,
+) -> None:
+    path_list = list(paths)
+    total = len(path_list)
+
+    for index, path in enumerate(path_list, start=1):
+        _report_progress(progress_callback, index, total, f"Validating image {index}/{total}: {path.name}")
         with Image.open(path) as image:
             image.verify()
 
 
-def convert_images_to_pdf(image_paths: Iterable[Path], output_path: str | Path) -> Path:
-    normalized = normalize_paths(image_paths)
-    if not normalized:
-        raise ValueError("변환할 이미지가 없습니다.")
+def validate_pdfs(
+    paths: Iterable[Path],
+    progress_callback: ProgressCallback | None = None,
+) -> None:
+    path_list = list(paths)
+    total = len(path_list)
 
-    validate_images(normalized)
+    for index, path in enumerate(path_list, start=1):
+        _report_progress(progress_callback, index, total, f"Validating PDF {index}/{total}: {path.name}")
+        with pikepdf.Pdf.open(path):
+            pass
+
+
+def convert_images_to_pdf(
+    image_paths: Iterable[Path],
+    output_path: str | Path,
+    progress_callback: ProgressCallback | None = None,
+) -> Path:
+    normalized, _, _ = classify_image_paths(image_paths)
+    if not normalized:
+        raise ValueError("No images were provided for conversion.")
+
+    validate_images(normalized, progress_callback=progress_callback)
+    total_steps = len(normalized) + 1
+    _report_progress(progress_callback, total_steps, total_steps, "Building PDF file...")
+
     layout_fun = img2pdf.get_layout_fun(
         pagesize=A4_PAGE_SIZE_PT,
         border=A4_MARGIN_PT,
@@ -85,4 +144,29 @@ def convert_images_to_pdf(image_paths: Iterable[Path], output_path: str | Path) 
             )
         )
 
+    return destination
+
+
+def merge_pdfs(
+    pdf_paths: Iterable[Path],
+    output_path: str | Path,
+    progress_callback: ProgressCallback | None = None,
+) -> Path:
+    normalized, _, _ = classify_pdf_paths(pdf_paths)
+    if len(normalized) < 2:
+        raise ValueError("At least two PDF files are required for merge.")
+
+    validate_pdfs(normalized, progress_callback=progress_callback)
+    total_steps = len(normalized) + 1
+    destination = Path(output_path).expanduser().resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    _report_progress(progress_callback, len(normalized) + 1, total_steps, "Merging PDF pages...")
+    merged_pdf = pikepdf.Pdf.new()
+
+    for path in normalized:
+        with pikepdf.Pdf.open(path) as source_pdf:
+            merged_pdf.pages.extend(source_pdf.pages)
+
+    merged_pdf.save(destination)
     return destination

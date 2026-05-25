@@ -1,4 +1,4 @@
-#define MyAppName "PDF Converter"
+﻿#define MyAppName "PDF Converter"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "LeeInpyo"
 #define MyAppExeName "PDFConverter.exe"
@@ -11,6 +11,8 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
+UsePreviousAppDir=yes
+UsePreviousGroup=yes
 OutputDir=..\release
 OutputBaseFilename=PDFConverter-Setup
 Compression=lzma
@@ -20,13 +22,16 @@ PrivilegesRequired=lowest
 ArchitecturesInstallIn64BitMode=x64compatible
 SetupIconFile=..\assets\app_icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
+CloseApplications=yes
+CloseApplicationsFilter={#MyAppExeName}
+RestartApplications=no
 
 [Languages]
 Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "바탕 화면 바로가기 만들기"; GroupDescription: "추가 작업:"; Flags: unchecked
+Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional tasks:"; Flags: unchecked
 
 [Files]
 Source: "..\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
@@ -36,4 +41,4 @@ Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "프로그램 실행"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
