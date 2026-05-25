@@ -93,10 +93,11 @@ $venvDir = Join-Path $projectRoot ".venv"
 $pythonExe = Join-Path $venvDir "Scripts\python.exe"
 $pyInstallerExe = Join-Path $venvDir "Scripts\pyinstaller.exe"
 $releaseDir = Join-Path $projectRoot "release"
+$buildRoot = Join-Path $projectRoot ".build"
 $buildToken = Get-Date -Format "yyyyMMdd_HHmmss"
-$distPath = Join-Path $env:TEMP "pdf_converter_dist_$buildToken"
-$workPath = Join-Path $env:TEMP "pdf_converter_build_$buildToken"
-$specPath = Join-Path $env:TEMP "pdf_converter_spec_$buildToken"
+$distPath = Join-Path $buildRoot "dist_$buildToken"
+$workPath = Join-Path $buildRoot "work_$buildToken"
+$specPath = Join-Path $buildRoot "spec_$buildToken"
 $finalExePath = Join-Path $releaseDir "PDFConverter.exe"
 $iconPath = Join-Path $projectRoot "assets\app_icon.ico"
 
@@ -112,12 +113,20 @@ Write-Host "[2/5] Installing or updating build tools..."
 Invoke-Python $pythonExe -m pip install --upgrade pip
 Invoke-Python $pythonExe -m pip install -r requirements.txt pyinstaller
 
-if ($Clean) {
-    foreach ($path in @($distPath, $workPath, $specPath)) {
-        if (Test-Path $path) {
-            Remove-Item -LiteralPath $path -Recurse -Force
-        }
+if (-not (Test-Path $buildRoot)) {
+    New-Item -ItemType Directory -Path $buildRoot | Out-Null
+}
+
+if ($Clean -and (Test-Path $buildRoot)) {
+    Remove-Item -LiteralPath $buildRoot -Recurse -Force
+    New-Item -ItemType Directory -Path $buildRoot | Out-Null
+}
+
+foreach ($path in @($distPath, $workPath, $specPath)) {
+    if (Test-Path $path) {
+        Remove-Item -LiteralPath $path -Recurse -Force
     }
+    New-Item -ItemType Directory -Path $path | Out-Null
 }
 
 if (-not (Test-Path $releaseDir)) {
